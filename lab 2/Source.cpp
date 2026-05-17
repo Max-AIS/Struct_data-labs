@@ -138,7 +138,10 @@ int main() {
     cout << "    Производительность: " << mflops_opt << " MFLOPS" << endl << endl;
 
     double percent = (mflops_opt / mflops_blas) * 100.0;
-    cout << "Оптимизированный алгоритм достигает " << percent << "% от BLAS" << endl;
+    cout << "Оптимизированный алгоритм достигает " << percent << "% от BLAS" << endl << endl;
+
+    cout << "Автор: Голиков М.А." << endl;
+    cout << "Группа: 020303-АИСа-025" << endl;
 
     return 0;
 }
