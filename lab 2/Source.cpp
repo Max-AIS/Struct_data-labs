@@ -43,6 +43,7 @@ void optimized_multiply(const vector<Complex>& A,
 
     fill(C.begin(), C.end(), Complex(0.0, 0.0));
 
+    // Транспонирование B: Bt[j][i] = B[i][j]
     vector<Complex> Bt(n * n);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
@@ -50,11 +51,13 @@ void optimized_multiply(const vector<Complex>& A,
         }
     }
 
+    // Определяем количество потоков
     unsigned int num_threads = thread::hardware_concurrency();
     if (num_threads == 0) num_threads = 4;
 
     vector<thread> threads;
 
+    // Функция для потока (обрабатывает диапазон строк)
     auto worker = [&](int start_row, int end_row) {
         for (int i = start_row; i < end_row; ++i) {
             const Complex* a_row = &A[i * n];
@@ -64,6 +67,7 @@ void optimized_multiply(const vector<Complex>& A,
                 Complex sum(0.0, 0.0);
                 const Complex* b_col = &Bt[j * n];
 
+                // Ручная размотка цикла для ускорения
                 int k = 0;
                 for (; k + 3 < n; k += 4) {
                     sum += a_row[k] * b_col[k];
@@ -79,6 +83,7 @@ void optimized_multiply(const vector<Complex>& A,
         }
         };
 
+    // Запуск потоков
     int rows_per_thread = n / num_threads;
     for (unsigned int t = 0; t < num_threads; ++t) {
         int start = t * rows_per_thread;
