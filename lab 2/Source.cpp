@@ -140,8 +140,5 @@ int main() {
     double percent = (mflops_opt / mflops_blas) * 100.0;
     cout << "Оптимизированный алгоритм достигает " << percent << "% от BLAS" << endl;
 
-    cout << "\nНажмите Enter для выхода...";
-    getchar();
-
     return 0;
 }
