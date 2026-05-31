@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
 #include <algorithm>
+#include <tuple>
 using namespace std;
 
 struct Variant {
@@ -17,42 +18,72 @@ struct Employee {
 vector<Employee> employees;
 vector<int> dp;
 vector<bool> visited;
+vector<vector<int>> order;
 
-int dfs(int u) {
-    if (visited[u]) return dp[u];
+int dfs(int u, vector<int>& resultOrder) {
+    if (visited[u]) {
+        for (int v : order[u]) {
+            resultOrder.push_back(v);
+        }
+        return dp[u];
+    }
     visited[u] = true;
 
     int best = 1e9;
+    vector<int> bestOrder;
 
     for (const auto& var : employees[u].variants) {
         int sumCost = var.cost;
         bool possible = true;
+        vector<int> currentOrder;
 
         for (int v : var.vizy) {
             if (v == u) {
                 possible = false;
                 break;
             }
-            int childCost = dfs(v);
+
+            vector<int> childOrder;
+            int childCost = dfs(v, childOrder);
+
             if (childCost == 1e9) {
                 possible = false;
                 break;
             }
+
             sumCost += childCost;
+            for (int x : childOrder) {
+                currentOrder.push_back(x);
+            }
         }
 
-        if (possible) {
-            best = min(best, sumCost);
+        if (possible && sumCost < best) {
+            best = sumCost;
+            bestOrder = currentOrder;
         }
+    }
+
+    if (best < 1e9) {
+        bestOrder.push_back(u);
+        order[u] = bestOrder;
+    }
+
+    for (int v : bestOrder) {
+        resultOrder.push_back(v);
     }
 
     return dp[u] = best;
 }
 
-int main() {
-    setlocale(LC_ALL, "Russian");
-    cout << "--- Программа для минимизации взяток для получения лицензии ---\n\n";
+void printOrder(const vector<int>& order) {
+    cout << "Порядок получения подписей:\n";
+    for (size_t i = 0; i < order.size(); i++) {
+        cout << "  " << (i + 1) << ". Чиновник " << order[i];
+        cout << "\n";
+    }
+}
 
+int main() {
     cout << "Введите количество чиновников N (N < 100): ";
     int N;
     cin >> N;
@@ -60,6 +91,7 @@ int main() {
     employees.resize(N + 1);
     dp.assign(N + 1, -1);
     visited.assign(N + 1, false);
+    order.resize(N + 1);
 
     for (int i = 1; i <= N; i++) {
         employees[i].id = i;
@@ -109,7 +141,7 @@ int main() {
             int vizCount;
             cin >> vizCount;
 
-            if (vizCount < 0 || vizCount > employees[i].children.size()) {
+            if (vizCount < 0 || vizCount >(int)employees[i].children.size()) {
                 cout << "    Ошибка: количество виз не может превышать количество непосредственных подчиненных ("
                     << employees[i].children.size() << "). Попробуйте снова.\n";
                 j--;
@@ -136,13 +168,16 @@ int main() {
     }
 
     cout << "\n--- Результат ---\n";
-    int result = dfs(1);
+    vector<int> globalOrder;
+    int result = dfs(1, globalOrder);
 
     if (result >= 1e9) {
         cout << "Невозможно получить лицензию (нет допустимых наборов виз для корневого чиновника или его подчиненных).\n\n";
     }
     else {
-        cout << "Минимальная сумма взяток: " << result << " долларов\n\n";
+        cout << "Минимальная сумма взяток: " << result << "\n\n";
+        printOrder(globalOrder);
+        cout << "\n";
     }
 
     cout << "Автор: Голиков М.А.\n";
