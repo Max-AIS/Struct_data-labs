@@ -24,7 +24,7 @@ struct Employee {
 vector<Employee> employees;
 vector<int> dp;
 vector<bool> visited;
-vector<int> signatureOrder; // Для хранения порядка подписей
+vector<int> signatureOrder;
 
 // Через массив
 class StackArray {
@@ -34,7 +34,7 @@ private:
     int top;
 
 public:
-    StackArray(int size = 100) {  // Уменьшил размер для лучшей производительности
+    StackArray(int size = 100) {
         capacity = size;
         data = new int[capacity];
         top = -1;
@@ -147,7 +147,6 @@ void printSignatureOrder(const vector<pair<int, int>>& choices) {
     cout << "\n--- ПОРЯДОК ПОЛУЧЕНИЯ ПОДПИСЕЙ (ВИЗ) ---\n";
     cout << "Оптимальная последовательность получения подписей (от подчиненных к начальникам):\n\n";
 
-    // Собираем всех чиновников, которые должны подписать
     vector<int> signers;
     for (const auto& choice : choices) {
         signers.push_back(choice.first);
@@ -156,16 +155,13 @@ void printSignatureOrder(const vector<pair<int, int>>& choices) {
         }
     }
 
-    // Удаляем дубликаты
     sort(signers.begin(), signers.end());
     signers.erase(unique(signers.begin(), signers.end()), signers.end());
 
-    // Топологическая сортировка (от листьев к корню) с помощью стека
     vector<int> order;
     vector<bool> visitedNode(employees.size(), false);
     vector<bool> processed(employees.size(), false);
 
-    // Используем стек для обхода в глубину
     StackList stack;
 
     for (int signer : signers) {
@@ -178,11 +174,9 @@ void printSignatureOrder(const vector<pair<int, int>>& choices) {
                 if (!visitedNode[current]) {
                     visitedNode[current] = true;
 
-                    // Находим выбранный вариант для текущего чиновника
                     bool hasChildren = false;
                     for (const auto& choice : choices) {
                         if (choice.first == current) {
-                            // Добавляем подчиненных в стек (в обратном порядке)
                             for (int i = employees[current].variants[choice.second].vizy.size() - 1; i >= 0; i--) {
                                 int child = employees[current].variants[choice.second].vizy[i];
                                 if (find(signers.begin(), signers.end(), child) != signers.end() && !visitedNode[child]) {
@@ -195,14 +189,12 @@ void printSignatureOrder(const vector<pair<int, int>>& choices) {
                     }
 
                     if (!hasChildren) {
-                        // Если нет подчиненных, отмечаем как обработанный
                         processed[current] = true;
                         order.push_back(current);
                         stack.pop();
                     }
                 }
                 else if (!processed[current]) {
-                    // Все дети обработаны, добавляем текущий узел
                     processed[current] = true;
                     order.push_back(current);
                     stack.pop();
@@ -214,11 +206,9 @@ void printSignatureOrder(const vector<pair<int, int>>& choices) {
         }
     }
 
-    // Выводим порядок
     for (size_t i = 0; i < order.size(); i++) {
         cout << "  " << (i + 1) << ". Чиновник " << order[i];
 
-        // Находим стоимость для этого чиновника
         for (const auto& choice : choices) {
             if (choice.first == order[i]) {
                 cout << " (стоимость: " << employees[order[i]].variants[choice.second].cost << ")";
@@ -404,7 +394,6 @@ void comparePerformance(int root) {
 
     vector<pair<int, int>> choicesArray, choicesList, choicesSTL;
 
-    // Тест для массива
     dp.assign(employees.size(), -1);
     choicesArray.clear();
     auto start = high_resolution_clock::now();
@@ -422,7 +411,6 @@ void comparePerformance(int root) {
     }
     cout << "\n  Время: " << durationArray.count() << " мкс\n\n";
 
-    // Тест для списка
     dp.assign(employees.size(), -1);
     choicesList.clear();
     start = high_resolution_clock::now();
@@ -440,7 +428,6 @@ void comparePerformance(int root) {
     }
     cout << "\n  Время: " << durationList.count() << " мкс\n\n";
 
-    // Тест для STL
     dp.assign(employees.size(), -1);
     choicesSTL.clear();
     start = high_resolution_clock::now();
@@ -458,7 +445,6 @@ void comparePerformance(int root) {
     }
     cout << "\n  Время: " << durationSTL.count() << " мкс\n\n";
 
-    // Вывод порядка подписей (используем результаты из STL реализации)
     if (resultSTL < 1e9) {
         printSignatureOrder(choicesSTL);
     }
@@ -546,7 +532,6 @@ int main() {
         }
     }
 
-    // Сравнение производительности всех трех реализаций
     comparePerformance(1);
 
     cout << "\nАвтор: Голиков М.А.\n";
